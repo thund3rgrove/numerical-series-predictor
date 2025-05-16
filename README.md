@@ -1,7 +1,7 @@
 Numerical Series Predictor
 =======================
 ## Overview
-This project implements an RNN/LSTM-based model trained to predict the next value in numerical sequences, utilizing multiple different patterns. The model is capable of handling various types of numerical sequences with different underlying patterns.
+This project implements a sequence prediction model based on **LSTM with attention**, designed to predict the next value in various types of numerical sequences. It generalizes across different patterns like linear, sinusoidal, logarithmic, and noisy sequences.
 
 ## ✨ Capabilities
 - Predict the next value in a sequence with varying structure
