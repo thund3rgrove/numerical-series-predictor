@@ -1,5 +1,5 @@
 # TODO: THAT IS NOT RELEVANT FILE.
-#  FOR RELEVANT DATA GENERATION ADDRESS THE ./main.ipynb FILE
+#  FOR RELEVANT DATA GENERATION ADDRESS THE ./main_experimental.ipynb FILE
 
 import torch
 import numpy as np
