@@ -4,9 +4,15 @@ import numpy as np
 from models.lstm_with_attention import LSTMWithAttention
 
 def load_model(path="weights/lstm_epoch69_val040.pt", input_dim=1, hidden_dim=64):
-    model = LSTMWithAttention(input_dim=input_dim, hidden_dim=hidden_dim)
-    model.load_state_dict(torch.load(path, map_location=torch.device("cpu")))
+    checkpoint = torch.load(path, map_location=torch.device("cpu"))
+
+    config = checkpoint["config"]
+    state_dict = checkpoint["state_dict"]
+
+    model = LSTMWithAttention(**config)
+    model.load_state_dict(state_dict)
     model.eval()
+
     return model
 
 def predict_next(model, sequence, max_length=20):
@@ -15,14 +21,23 @@ def predict_next(model, sequence, max_length=20):
         raise ValueError(f"Sequence is longer than supported max length ({max_length})")
 
     x = torch.tensor(sequence, dtype=torch.float32)
+    # mean = x.mean()
+    # std = x.std() + 1e-8
+    # x_norm = (x - mean) / std
+    x_norm = x
+
     padding = max_length - seq_len
-    padded_x = torch.cat([x, torch.zeros(padding)], dim=0).unsqueeze(0)  # (1, max_length)
-    mask = torch.tensor([1] * seq_len + [0] * padding, dtype=torch.bool).unsqueeze(0)  # (1, max_length)
+    padded_x = torch.cat([x_norm, torch.zeros(padding)], dim=0).unsqueeze(0)
+    mask = torch.tensor([1] * seq_len + [0] * padding, dtype=torch.bool).unsqueeze(0)
 
     with torch.no_grad():
         output, attn = model(padded_x, mask)
 
-    return output.item(), attn.squeeze().numpy()[:seq_len]
+    # predict normalization
+    # pred = output.item() * std.item() + mean.item()
+    pred = output.item()
+    return pred, attn.squeeze().numpy()[:seq_len]
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Predict the next value in a numerical sequence.")

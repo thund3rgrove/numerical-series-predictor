@@ -3,7 +3,6 @@
 #  build_dataloaders(batch_size=64, split=(0.8, 0.1, 0.1)) -> train_loader, val_loader, test_loader
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader, random_split
-from data.generators import generate_dataset
 
 class SequenceDataset(Dataset):
     def __init__(self, data, labels, masks):
@@ -37,7 +36,9 @@ def build_dataloaders(data, labels, masks, batch_size=64, split=(0.8, 0.1, 0.1))
 
 
 if __name__ == '__main__':
-    data, labels, masks = generate_dataset(num_samples=1000)
+    from data.generators import generate_data
+
+    data, labels, masks = generate_data(num_samples=1000)
 
     train_loader, val_loader, test_loader = build_dataloaders(data, labels, masks)
 

@@ -1,3 +1,5 @@
+import os
+from datetime import datetime
 import torch
 import torch.nn as nn
 from tqdm import tqdm
@@ -6,7 +8,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 def train_model(model, train_loader, val_loader, *,
                 epochs=100, patience=10, lr=1e-3,
-                device='cuda' if torch.cuda.is_available() else 'cpu'):
+                device='cuda' if torch.cuda.is_available() else 'cpu',
+                checkpoint_every=50):
 
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -15,10 +18,15 @@ def train_model(model, train_loader, val_loader, *,
 
     best_val_loss = float('inf')
     best_state = None
-    early_stopping_counter = 0
+    best_epoch = 0
 
     train_losses = []
     val_losses = []
+
+    # Создание директории для чекпоинтов
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    checkpoint_dir = f"checkpoints/{timestamp}"
+    os.makedirs(checkpoint_dir, exist_ok=True)
 
     for epoch in range(1, epochs + 1):
         model.train()
@@ -63,17 +71,27 @@ def train_model(model, train_loader, val_loader, *,
             print(f"Example target: {y[0].item()}")
             print(f"Example prediction: {output[0].item()}")
 
-
-        # Early stopping
+        # Save best state
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             best_state = model.state_dict()
-            early_stopping_counter = 0
-        else:
-            early_stopping_counter += 1
-            if early_stopping_counter >= patience:
-                tqdm.write(f"\nEarly stopping triggered after {epoch} epochs.")
-                break
+            best_epoch = epoch
+
+        # Save checkpoint every N epochs
+        if epoch % checkpoint_every == 0:
+            path = os.path.join(checkpoint_dir, f"checkpoint_epoch{epoch:03d}_best{best_epoch:03d}_valloss{best_val_loss:.4f}.pt")
+            torch.save({
+                "state_dict": best_state,
+                "config": model.get_config(),
+                "best_val_loss": best_val_loss,
+                "best_epoch": best_epoch
+            }, path)
+            tqdm.write(f"Checkpoint saved at epoch {epoch} ✅")
+
+        # Early Stopping
+        if epoch - best_epoch >= patience:
+            tqdm.write(f"\nEarly stopping triggered. Best epoch: {best_epoch}, val_loss: {best_val_loss:.6f}")
+            break
 
     # Load best weights
     if best_state:
