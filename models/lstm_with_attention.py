@@ -11,8 +11,8 @@ class Attention(nn.Module):
             # nn.Linear(hidden_dim // 2, 1)
         # )
         self.attn = nn.Linear(hidden_dim, 1)
-        self.dropout = nn.Dropout(dropout)
-        # self.dropout = nn.Identity()
+        # self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Identity()
         self.temperature = 1.0
 
     def forward(self, encoder_outputs, mask=None):
